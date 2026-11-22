@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "model": {
+    "section": {
+      "designation": "W250x49",
+      "area": 6260,
+      "ix": 70.6,
+      "iy": 15.1,
+      "deadLoad": 0.481
+    },
+    "material": {
+      "name": "350W",
+      "e": 200000
+    },
+    "nodes": [
+      {
+        "id": 1,
+        "x": 0,
+        "y": 0,
+        "support": "Pin"
+      },
+      {
+        "id": 2,
+        "x": 6,
+        "y": 0,
+        "support": "RollerVertical"
+      },
+      {
+        "id": 3,
+        "x": 14,
+        "y": 0,
+        "support": "RollerVertical"
+      },
+      {
+        "id": 4,
+        "x": 20,
+        "y": 0,
+        "support": "RollerVertical"
+      }
+    ],
+    "members": [
+      {
+        "id": 1,
+        "nodeI": 1,
+        "nodeJ": 2,
+        "axis": "Major"
+      },
+      {
+        "id": 2,
+        "nodeI": 3,
+        "nodeJ": 2,
+        "axis": "Major"
+      },
+      {
+        "id": 3,
+        "nodeI": 3,
+        "nodeJ": 4,
+        "axis": "Major"
+      }
+    ],
+    "loadCases": [
+      {
+        "id": 1,
+        "name": "D",
+        "category": "D",
+        "includeSelfWeight": false
+      },
+      {
+        "id": 2,
+        "name": "L",
+        "category": "L",
+        "includeSelfWeight": false
+      }
+    ],
+    "nodalLoads": [],
+    "memberLoads": [
+      {
+        "memberId": 1,
+        "loadCaseId": 1,
+        "qx": 0,
+        "qy": -8
+      },
+      {
+        "memberId": 2,
+        "loadCaseId": 1,
+        "qx": 0,
+        "qy": -8
+      },
+      {
+        "memberId": 3,
+        "loadCaseId": 1,
+        "qx": 0,
+        "qy": -8
+      },
+      {
+        "memberId": 2,
+        "loadCaseId": 2,
+        "qx": 0,
+        "qy": -12
+      }
+    ],
+    "combinations": [
+      {
+        "name": "ULS 1.4D",
+        "limitState": "Uls",
+        "isActive": true,
+        "factors": {
+          "1": 1.4,
+          "2": 0
+        }
+      },
+      {
+        "name": "ULS 1.25D \u002B 1.5L",
+        "limitState": "Uls",
+        "isActive": true,
+        "factors": {
+          "1": 1.25,
+          "2": 1.5
+        }
+      },
+      {
+        "name": "SLS D \u002B L",
+        "limitState": "Sls",
+        "isActive": true,
+        "factors": {
+          "1": 1,
+          "2": 1
+        }
+      }
+    ]
+  }
+}

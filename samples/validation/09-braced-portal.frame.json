@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "model": {
+    "section": {
+      "designation": "W250x49",
+      "area": 6260,
+      "ix": 70.6,
+      "iy": 15.1,
+      "deadLoad": 0.481
+    },
+    "material": {
+      "name": "350W",
+      "e": 200000
+    },
+    "nodes": [
+      {
+        "id": 1,
+        "x": 0,
+        "y": 0,
+        "support": "Pin"
+      },
+      {
+        "id": 2,
+        "x": 6,
+        "y": 0,
+        "support": "Pin"
+      },
+      {
+        "id": 3,
+        "x": 0,
+        "y": 4,
+        "support": "Free"
+      },
+      {
+        "id": 4,
+        "x": 6,
+        "y": 4,
+        "support": "Free"
+      }
+    ],
+    "members": [
+      {
+        "id": 1,
+        "nodeI": 1,
+        "nodeJ": 3,
+        "axis": "Major"
+      },
+      {
+        "id": 2,
+        "nodeI": 2,
+        "nodeJ": 4,
+        "axis": "Major"
+      },
+      {
+        "id": 3,
+        "nodeI": 3,
+        "nodeJ": 4,
+        "axis": "Major"
+      },
+      {
+        "id": 4,
+        "nodeI": 1,
+        "nodeJ": 4,
+        "axis": "Major"
+      }
+    ],
+    "loadCases": [
+      {
+        "id": 1,
+        "name": "D",
+        "category": "D",
+        "includeSelfWeight": false
+      },
+      {
+        "id": 2,
+        "name": "W",
+        "category": "W",
+        "includeSelfWeight": false
+      }
+    ],
+    "nodalLoads": [
+      {
+        "nodeId": 3,
+        "loadCaseId": 2,
+        "fx": 20,
+        "fy": 0,
+        "mz": 0
+      }
+    ],
+    "memberLoads": [
+      {
+        "memberId": 3,
+        "loadCaseId": 1,
+        "qx": 0,
+        "qy": -10
+      }
+    ],
+    "combinations": [
+      {
+        "name": "ULS 1.25D \u002B 1.4W",
+        "limitState": "Uls",
+        "isActive": true,
+        "factors": {
+          "1": 1.25,
+          "2": 1.4
+        }
+      }
+    ]
+  }
+}

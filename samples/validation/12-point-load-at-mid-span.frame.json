@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "model": {
+    "section": {
+      "designation": "W250x49",
+      "area": 6260,
+      "ix": 70.6,
+      "iy": 15.1,
+      "deadLoad": 0.481
+    },
+    "material": {
+      "name": "350W",
+      "e": 200000
+    },
+    "nodes": [
+      {
+        "id": 1,
+        "x": 0,
+        "y": 0,
+        "support": "Pin"
+      },
+      {
+        "id": 2,
+        "x": 3,
+        "y": 0,
+        "support": "Free"
+      },
+      {
+        "id": 3,
+        "x": 6,
+        "y": 0,
+        "support": "RollerVertical"
+      }
+    ],
+    "members": [
+      {
+        "id": 1,
+        "nodeI": 1,
+        "nodeJ": 2,
+        "axis": "Major"
+      },
+      {
+        "id": 2,
+        "nodeI": 2,
+        "nodeJ": 3,
+        "axis": "Major"
+      }
+    ],
+    "loadCases": [
+      {
+        "id": 1,
+        "name": "D",
+        "category": "D",
+        "includeSelfWeight": false
+      }
+    ],
+    "nodalLoads": [
+      {
+        "nodeId": 2,
+        "loadCaseId": 1,
+        "fx": 0,
+        "fy": -40,
+        "mz": 0
+      }
+    ],
+    "memberLoads": [],
+    "combinations": []
+  }
+}

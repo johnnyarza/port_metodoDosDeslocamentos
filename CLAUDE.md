@@ -14,6 +14,9 @@ The Delphi sources (`refDocs/Projects`) are Windows-1252.
   deformed shape, N/V/M, reactions; wheel zoom, drag pan, double-click fit, click picks a node or member. It is meant
   to move into WBeamS16App with the editor. `FrameAnalysis.exe file.frame.json` opens a file.
 - `tests/FrameAnalysis.Tests`: xUnit. `dotnet build FrameAnalysis.slnx`, `dotnet test tests/FrameAnalysis.Tests`.
+- `samples/validation`: 12 frames (`.frame.json`) with result sheets (`.results.md`) for the user's cross-check against
+  another program; see its README. Made by `tools/MakeSamples` (`dotnet run --project tools/MakeSamples`); rerun it
+  after any solver change. `SampleFileTests` checks they load and solve.
 
 ## Planned integration (user's workflow)
 User creates a task in WBeamS16App → picks the section → clicks a button → this frame editor opens with the task's
@@ -60,8 +63,21 @@ result (load case or combination) → `S16DesignForces` fills the task (Tf/Cf, V
 - Thesis portal frame (guide Case B) against the guide's numpy values. **The guide's u₃ = 4.2e−6 m is inconsistent**
   with its own beam force (by symmetry u₃ = N·L/2EA = 3.52e−6 m); the test checks that identity instead.
 - Rotating a frame and its loads must not change member-axis results (covers the original's inclined-member bugs).
-- The user will cross-check forces with another program; no Delphi golden values are available.
+- The user cross-checks forces with another program using `samples/validation`; no Delphi golden values are available.
 
-## Not done yet
-- Integration into WBeamS16App (button, task storage, filling the task's boxes), adding nodes and members by clicking
-  in the drawing, point loads within a span, partial or trapezoidal loads, earthquake, settlements, temperature.
+## Status (2026-11-22) and next steps
+- **Cross-check in progress (step 1 of the plan):** the user confirmed samples **01 and 02** match their other
+  program; 03–12 still to check. When they report a difference, trace it with the sample, case, member and value.
+- **Agreed order after the cross-check:**
+  2. Gaps that matter for steel frames: member end releases (hinges) first (simple shear connections; today every
+     joint is rigid), then point loads within a span, then partial/trapezoidal loads.
+  3. S16 second-order effects (U2 / notional loads / P-Δ): needs the user's decision on the approach; this solver is
+     first-order.
+  4. Integration into WBeamS16App (button on the task, frame stored as JSON with the task, picked member and result
+     fill the task's boxes).
+  5. Smaller: adding nodes and members by clicking in the drawing, printing/exporting.
+- Also not done: earthquake, settlements, temperature.
+- `refDocs/Projects` (Delphi sources, 103 MB) and `refDocs/WBeamS16App` (copy of the other repo) are git-ignored and
+  exist only on the original computer; the porting guide is committed. Get WBeamS16App from its own repo if needed.
+- UI checks were done by screenshots driven through UI Automation (a PowerShell script in the session scratchpad,
+  not kept); the user runs the app with F5 (`.vscode/launch.json`).
