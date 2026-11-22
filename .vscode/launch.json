@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug FrameAnalysis",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/FrameAnalysis.App/bin/Debug/net10.0-windows10.0.19041.0/FrameAnalysis.exe",
+      "cwd": "${workspaceFolder}/src/FrameAnalysis.App",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    }
+  ]
+}

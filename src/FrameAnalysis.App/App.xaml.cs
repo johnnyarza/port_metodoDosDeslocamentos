@@ -13,7 +13,9 @@ public partial class App : Application
     {
         base.OnStartup(e);
         DispatcherUnhandledException += OnUnhandled;
-        new MainWindow().Show();
+        var window = new MainWindow();
+        window.Show();
+        if (e.Args.Length > 0) window.OpenFile(e.Args[0]); // a .frame.json given on the command line or double-clicked
     }
 
     private static void OnUnhandled(object sender, DispatcherUnhandledExceptionEventArgs e)

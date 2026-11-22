@@ -11,6 +11,7 @@
             </ResourceDictionary.MergedDictionaries>
 
             <views:EnumLabelConverter x:Key="EnumLabel" />
+            <views:EnumEqualsConverter x:Key="EnumEquals" />
 
             <!-- Accent colour at low opacity, as in WBeamS16App's lists. -->
             <SolidColorBrush x:Key="SelectedRowBrush" Color="{DynamicResource SystemAccentColor}" Opacity="0.22" />

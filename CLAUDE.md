@@ -7,7 +7,12 @@ The Delphi sources (`refDocs/Projects`) are Windows-1252.
 
 ## Layout
 - `src/FrameAnalysis.Core`: model, solver, NBCC combinations, JSON. No dependencies, no UI, no database.
+  `Drawing/FramePlot` gives drawing geometry in model coordinates (diagram ordinates, deformed shape, summed loads,
+  sign runs) so it can be tested and reused by any UI.
 - `src/FrameAnalysis.App`: minimal WPF test UI (one window) to enter data and see results. Not the final UI.
+  `Views/FrameView` is the frame drawing (a `FrameworkElement` painting in `OnRender`): frame, supports, loads,
+  deformed shape, N/V/M, reactions; wheel zoom, drag pan, double-click fit, click picks a node or member. It is meant
+  to move into WBeamS16App with the editor. `FrameAnalysis.exe file.frame.json` opens a file.
 - `tests/FrameAnalysis.Tests`: xUnit. `dotnet build FrameAnalysis.slnx`, `dotnet test tests/FrameAnalysis.Tests`.
 
 ## Planned integration (user's workflow)
@@ -45,6 +50,8 @@ result (load case or combination) → `S16DesignForces` fills the task (Tf/Cf, V
   orientation-specific flips for vertical ones; one rule now applies to every member. A beam drawn right to left gets
   negative sagging moments in member axes; `S16DesignForces` drops the signs anyway.
 - Reactions: forces from the support on the structure, global axes.
+- Diagrams: M is drawn on the tension side (towards local −y when positive); N and V towards local +y when positive.
+  Blue = positive, red = negative in member axes, so a member drawn right to left shows sagging in red.
 
 ## Verification
 - Closed-form tests: fixed-fixed (guide Case A), simply supported, cantilever, axial loads, inclined rafter.
@@ -54,5 +61,5 @@ result (load case or combination) → `S16DesignForces` fills the task (Tf/Cf, V
 - The user will cross-check forces with another program; no Delphi golden values are available.
 
 ## Not done yet
-- Integration into WBeamS16App (button, task storage, filling the task's boxes), drawing of the frame and diagrams,
-  point loads within a span, partial or trapezoidal loads, earthquake, settlements, temperature.
+- Integration into WBeamS16App (button, task storage, filling the task's boxes), adding nodes and members by clicking
+  in the drawing, point loads within a span, partial or trapezoidal loads, earthquake, settlements, temperature.

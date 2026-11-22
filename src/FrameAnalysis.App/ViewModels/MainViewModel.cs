@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FrameAnalysis.App.Views;
 using FrameAnalysis.Core.Analysis;
 using FrameAnalysis.Core.Data;
 using FrameAnalysis.Core.Loads;
@@ -69,6 +70,68 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private BendingAxis _newMemberAxis = BendingAxis.Major;
     [ObservableProperty] private string _newCaseName = "";
     [ObservableProperty] private LoadCategory _newCaseCategory = LoadCategory.D;
+
+    // ---- Drawing ----
+
+    /// <summary>The model itself, for the drawing (which reads it but never edits it).</summary>
+    public FrameModel Model => _model;
+
+    /// <summary>Bumped whenever the inputs may have changed, so the drawing repaints.</summary>
+    [ObservableProperty] private int _drawingRevision;
+
+    [ObservableProperty] private FrameDrawMode _drawMode = FrameDrawMode.Model;
+    [ObservableProperty] private IReadOnlyList<LoadDisplay> _loadDisplays = [];
+    [ObservableProperty] private LoadDisplay? _selectedLoadDisplay;
+    [ObservableProperty] private bool _showLabels = true;
+    [ObservableProperty] private bool _showValues = true;
+
+    /// <summary>The member picked in the drawing, the members grid or the results; all three follow it.</summary>
+    [ObservableProperty] private int? _pickedMemberId;
+
+    /// <summary>The node picked in the drawing or the nodes grid.</summary>
+    [ObservableProperty] private int? _pickedNodeId;
+
+    public void Redraw() => DrawingRevision++;
+
+    partial void OnPickedMemberIdChanged(int? value)
+    {
+        if (value is null) return;
+        if (Members.FirstOrDefault(m => m.Id == value) is { } input) SelectedInputMember = input;
+        if (MemberRows.FirstOrDefault(r => r.Member == value) is { } row) SelectedMemberRow = row;
+    }
+
+    partial void OnPickedNodeIdChanged(int? value)
+    {
+        if (value is not null && Nodes.FirstOrDefault(n => n.Id == value) is { } node) SelectedNode = node;
+    }
+
+    partial void OnSelectedInputMemberChanged(Member? value)
+    {
+        if (value is not null) PickedMemberId = value.Id;
+    }
+
+    partial void OnSelectedNodeChanged(Node? value)
+    {
+        if (value is not null) PickedNodeId = value.Id;
+    }
+
+    private const string NoLoads = "No loads";
+
+    /// <summary>"No loads", each load case, then each combination (factored loads).</summary>
+    private void RebuildLoadDisplays()
+    {
+        var keep = SelectedLoadDisplay?.Name;
+        var list = new List<LoadDisplay> { new(NoLoads, _ => 0, IsNone: true) };
+        foreach (var lc in _model.LoadCases)
+        {
+            var id = lc.Id;
+            list.Add(new LoadDisplay(lc.Name, c => c == id ? 1 : 0));
+        }
+        foreach (var combo in _model.Combinations)
+            list.Add(new LoadDisplay(combo.Name, combo.FactorOf));
+        LoadDisplays = list;
+        SelectedLoadDisplay = list.FirstOrDefault(l => l.Name == keep) ?? list.ElementAtOrDefault(1) ?? list[0];
+    }
 
     /// <summary>Raised when the load cases change, so the window can rebuild the factor columns of the combinations grid.</summary>
     public event EventHandler? LoadCasesChanged;
@@ -136,7 +199,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnSelectedResultChanged(ResultSet? value)
     {
-        var keep = SelectedMemberRow?.Member;
+        // The drawing shows the loads behind the result being looked at, unless loads were switched off.
+        if (value is not null && SelectedLoadDisplay?.Name != NoLoads && LoadDisplays.FirstOrDefault(l => l.Name == value.Name) is { } loads)
+            SelectedLoadDisplay = loads;
+        var keep = PickedMemberId ?? SelectedMemberRow?.Member;
         if (value is null)
         {
             NodeRows = [];
@@ -155,7 +221,11 @@ public sealed partial class MainViewModel : ObservableObject
         UpdateMemberDetail();
     }
 
-    partial void OnSelectedMemberRowChanged(MemberRow? value) => UpdateMemberDetail();
+    partial void OnSelectedMemberRowChanged(MemberRow? value)
+    {
+        if (value is not null) PickedMemberId = value.Member;
+        UpdateMemberDetail();
+    }
 
     private void UpdateMemberDetail()
     {
@@ -216,6 +286,9 @@ public sealed partial class MainViewModel : ObservableObject
         _filePath = path;
         OnPropertyChanged(nameof(Section));
         OnPropertyChanged(nameof(Material));
+        OnPropertyChanged(nameof(Model));
+        PickedMemberId = null;
+        PickedNodeId = null;
         Refresh();
         Results = null;
         ResultSets = [];
@@ -240,7 +313,9 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var lc in _model.LoadCases)
                 c.Factors.TryAdd(lc.Id, 0); // every factor cell needs a value to bind to
         LoadCasesChanged?.Invoke(this, EventArgs.Empty);
+        RebuildLoadDisplays();
         MarkInputsChanged();
+        Redraw();
     }
 
     /// <summary>A new frame starts with D (with self-weight), L, S and W cases and the NBCC combinations.</summary>
@@ -291,11 +366,15 @@ public sealed partial class MainViewModel : ObservableObject
     private void Open()
     {
         var dlg = new OpenFileDialog { Filter = FileFilter };
-        if (dlg.ShowDialog() != true) return;
+        if (dlg.ShowDialog() == true) OpenFile(dlg.FileName);
+    }
+
+    public void OpenFile(string path)
+    {
         try
         {
-            var (model, problems) = FrameModelJson.Load(File.ReadAllText(dlg.FileName));
-            Load(model, dlg.FileName);
+            var (model, problems) = FrameModelJson.Load(File.ReadAllText(path));
+            Load(model, path);
             if (problems.Count > 0) ShowError("The file has problems to fix before solving", string.Join(Environment.NewLine, problems));
             else HasMessage = false;
         }

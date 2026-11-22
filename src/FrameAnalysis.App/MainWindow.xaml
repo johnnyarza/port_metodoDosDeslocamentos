@@ -2,6 +2,7 @@
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:views="clr-namespace:FrameAnalysis.App.Views"
                  Title="{Binding WindowTitle}"
                  Width="1440" Height="880" MinWidth="1100" MinHeight="640"
                  ExtendsContentIntoTitleBar="True"
@@ -361,7 +362,9 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="3*" MinHeight="220" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="2*" MinHeight="160" />
                 </Grid.RowDefinitions>
                 <DockPanel Grid.Row="0" Margin="0,4,0,6">
                     <TextBlock Text="Results" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0" />
@@ -385,7 +388,60 @@
                     </TextBlock>
                 </StackPanel>
 
-                <TabControl Grid.Row="2">
+                <!-- Frame drawing: follows the inputs as they are typed, and the selected result once solved. -->
+                <Border Grid.Row="2" Style="{StaticResource Card}" Padding="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <WrapPanel Margin="12,6,12,2">
+                            <WrapPanel.Resources>
+                                <Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+                                    <Setter Property="MinWidth" Value="0" />
+                                    <Setter Property="Margin" Value="0,0,14,0" />
+                                    <Setter Property="GroupName" Value="DrawMode" />
+                                </Style>
+                            </WrapPanel.Resources>
+                            <RadioButton Content="Frame" ToolTip="Supports, loads and numbering"
+                                         IsChecked="{Binding DrawMode, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static views:FrameDrawMode.Model}}" />
+                            <RadioButton Content="Deformed"
+                                         IsChecked="{Binding DrawMode, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static views:FrameDrawMode.Deformed}}" />
+                            <RadioButton Content="N" ToolTip="Axial force, tension positive"
+                                         IsChecked="{Binding DrawMode, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static views:FrameDrawMode.Axial}}" />
+                            <RadioButton Content="V" ToolTip="Shear, V = dM/dx"
+                                         IsChecked="{Binding DrawMode, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static views:FrameDrawMode.Shear}}" />
+                            <RadioButton Content="M" ToolTip="Bending moment, drawn on the tension side"
+                                         IsChecked="{Binding DrawMode, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static views:FrameDrawMode.Moment}}" />
+                            <RadioButton Content="Reactions"
+                                         IsChecked="{Binding DrawMode, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static views:FrameDrawMode.Reactions}}" />
+                            <StackPanel Orientation="Horizontal" Margin="6,0,14,0">
+                                <TextBlock Text="Loads" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <ComboBox ItemsSource="{Binding LoadDisplays}" SelectedItem="{Binding SelectedLoadDisplay}" MinWidth="170" MaxWidth="300" />
+                            </StackPanel>
+                            <CheckBox Content="Numbers" IsChecked="{Binding ShowLabels}" MinWidth="0" Margin="0,0,10,0" />
+                            <CheckBox Content="Values" IsChecked="{Binding ShowValues}" MinWidth="0" Margin="0,0,10,0" />
+                            <ui:Button Content="Fit" Icon="{ui:SymbolIcon ZoomFit24}" Click="FitDrawing_Click" Padding="10,4"
+                                       ToolTip="Show the whole frame (or double-click the drawing). Wheel zooms, drag pans, click picks a node or member." />
+                        </WrapPanel>
+                        <views:FrameView x:Name="FrameDrawing" Grid.Row="1"
+                                         Model="{Binding Model}"
+                                         Result="{Binding SelectedResult}"
+                                         Mode="{Binding DrawMode}"
+                                         Loads="{Binding SelectedLoadDisplay}"
+                                         ShowLabels="{Binding ShowLabels}"
+                                         ShowValues="{Binding ShowValues}"
+                                         IsStale="{Binding IsStale}"
+                                         Revision="{Binding DrawingRevision}"
+                                         SelectedMemberId="{Binding PickedMemberId}"
+                                         SelectedNodeId="{Binding PickedNodeId}" />
+                    </Grid>
+                </Border>
+
+                <GridSplitter Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeDirection="Rows"
+                              Background="Transparent" Cursor="SizeNS" ToolTip="Drag to resize the drawing" />
+
+                <TabControl Grid.Row="4">
                     <TabItem Header="Nodes">
                         <Border Style="{StaticResource ListBorder}" Margin="0,12,0,0">
                             <DataGrid ItemsSource="{Binding NodeRows}" IsReadOnly="True">
