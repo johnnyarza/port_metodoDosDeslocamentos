@@ -1,0 +1,10 @@
+# Text files are stored and checked out with LF, so Windows tools and Claude's edits agree.
+* text=auto eol=lf
+
+# Never touch line endings of binary files.
+*.png binary
+*.ico binary
+*.xlsx binary
+*.pdf binary
+*.db binary
+*.mcdx binary

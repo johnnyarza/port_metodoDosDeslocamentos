@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FrameAnalysis.Core/FrameAnalysis.Core.csproj" />
+    <Project Path="src/FrameAnalysis.App/FrameAnalysis.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FrameAnalysis.Tests/FrameAnalysis.Tests.csproj" />
+  </Folder>
+</Solution>

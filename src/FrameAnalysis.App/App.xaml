@@ -1,0 +1,76 @@
+<Application x:Class="FrameAnalysis.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:views="clr-namespace:FrameAnalysis.App.Views">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Light" />
+                <ui:ControlsDictionary />
+            </ResourceDictionary.MergedDictionaries>
+
+            <views:EnumLabelConverter x:Key="EnumLabel" />
+
+            <!-- Accent colour at low opacity, as in WBeamS16App's lists. -->
+            <SolidColorBrush x:Key="SelectedRowBrush" Color="{DynamicResource SystemAccentColor}" Opacity="0.22" />
+
+            <!-- Lists: same rounded outline as the input boxes (WBeamS16App's list convention). -->
+            <Style x:Key="ListBorder" TargetType="Border">
+                <Setter Property="Padding" Value="2" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+                <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            </Style>
+
+            <!-- Detail panels are cards. -->
+            <Style x:Key="Card" TargetType="Border">
+                <Setter Property="Padding" Value="14,10" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+            </Style>
+
+            <Style x:Key="GridRow" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                    </Trigger>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="{StaticResource SelectedRowBrush}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+                <Setter Property="AutoGenerateColumns" Value="False" />
+                <Setter Property="CanUserAddRows" Value="False" />
+                <Setter Property="CanUserDeleteRows" Value="False" />
+                <Setter Property="CanUserResizeRows" Value="False" />
+                <Setter Property="CanUserSortColumns" Value="False" />
+                <Setter Property="SelectionMode" Value="Single" />
+                <Setter Property="HeadersVisibility" Value="Column" />
+                <Setter Property="GridLinesVisibility" Value="None" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="RowStyle" Value="{StaticResource GridRow}" />
+                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            </Style>
+
+            <Style x:Key="FieldLabel" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Margin" Value="0,0,0,3" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            </Style>
+
+            <Style x:Key="Note" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

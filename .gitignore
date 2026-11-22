@@ -1,0 +1,10 @@
+bin/
+obj/
+publish/
+.vs/
+*.user
+*.db
+
+# Reference material kept locally only (Delphi build output, copy of WBeamS16App)
+refDocs/Projects/
+refDocs/WBeamS16App/

@@ -1,0 +1,58 @@
+# Frame Analysis (port of Método dos Deslocamentos)
+
+C# port of the plane-frame displacement method from the 2020 Delphi thesis app, to be integrated later into
+WBeamS16App (a copy lives in `refDocs/WBeamS16App` for reference; same stack: .NET 10, WPF-UI 4.3.0,
+CommunityToolkit.Mvvm 8.4.2, xUnit). Background and the original's bugs: `refDocs/PORTING_GUIDE_Metodo_Deslocamentos.md`.
+The Delphi sources (`refDocs/Projects`) are Windows-1252.
+
+## Layout
+- `src/FrameAnalysis.Core`: model, solver, NBCC combinations, JSON. No dependencies, no UI, no database.
+- `src/FrameAnalysis.App`: minimal WPF test UI (one window) to enter data and see results. Not the final UI.
+- `tests/FrameAnalysis.Tests`: xUnit. `dotnet build FrameAnalysis.slnx`, `dotnet test tests/FrameAnalysis.Tests`.
+
+## Planned integration (user's workflow)
+User creates a task in WBeamS16App → picks the section → clicks a button → this frame editor opens with the task's
+section and steel grade → user enters nodes, members and loads → user looks at all results and picks one member and one
+result (load case or combination) → `S16DesignForces` fills the task (Tf/Cf, Vf, Mfx or Mfy, ω2's Mmax/Ma/Mb/Mc,
+ω1's Mi/Mj and curvature). WBeamS16App receives the values without sign. The frame would be stored as JSON with the task.
+
+## Decisions (from the user, 2026-11-22)
+- **One section and one material for the whole frame**, from the task (`FrameModel.Section`/`Material`, handbook
+  units: mm², 10⁶ mm⁴, kN/m, MPa). `FrameSolver.Analyze` takes an optional per-member properties function, used by
+  the tests (thesis frame has two sections) and available if per-member sections are ever wanted.
+- **Each member has a `BendingAxis`** (Major = Ix, web in the frame plane; Minor = Iy), because forces are referenced to
+  the global X–Y plane.
+- **Self-weight** (section dead load, downward per m of member) is on by default in the D case and can be switched off
+  (`LoadCase.IncludeSelfWeight`, D cases only, at most one case).
+- **Loads are global only.** Thesis sign convention: +Y up, so gravity is negative (Qy = −12). Uniform loads are per m of
+  member length, full length only.
+- **Supports:** free, pin, fixed, roller with vertical reaction, roller with horizontal reaction. No inclined rollers.
+- **NBCC combinations are an editable table** (`LoadCombination.Factors` per load case), seeded by
+  `NbccCombinations.CreateDefaults` with ULS (Table 4.1.3.2.-A without E, 1.25D and 0.9D variants) and SLS. D, L and S
+  cases add up; W cases are alternatives. Only D, L, S, W for now.
+- **Deleting a node is blocked while a member uses it** (its point loads are deleted with it). Deleting a member deletes
+  its loads; deleting a load case deletes its loads and factors.
+- **Storage is JSON**; the links Firebird enforced are enforced by `FrameModel` edits and `FrameModel.Validate()`
+  (run on load, save and solve). Ids need not be contiguous; new ids are max + 1.
+- **Units:** internally N, mm, MPa (WBeamS16App's units). User-facing: m, kN, kN/m, kN·m; displacements mm and rad.
+
+## Sign conventions
+- Member-end actions (`MemberResult.EndForces`): forces on the member in member axes (Gere & Weaver, as the original's
+  AM_out); counter-clockwise moments positive. Local x runs from node I to J.
+- Internal forces (`ForcesAt(x)`), taken on the part towards node I as in the original ("vista à esquerda"):
+  N tension positive, M positive when it stretches the local −y face (sagging for a beam drawn left to right).
+  **V = dM/dx**: this differs from the original, whose mid-span shear had the opposite sign for horizontal members and
+  orientation-specific flips for vertical ones; one rule now applies to every member. A beam drawn right to left gets
+  negative sagging moments in member axes; `S16DesignForces` drops the signs anyway.
+- Reactions: forces from the support on the structure, global axes.
+
+## Verification
+- Closed-form tests: fixed-fixed (guide Case A), simply supported, cantilever, axial loads, inclined rafter.
+- Thesis portal frame (guide Case B) against the guide's numpy values. **The guide's u₃ = 4.2e−6 m is inconsistent**
+  with its own beam force (by symmetry u₃ = N·L/2EA = 3.52e−6 m); the test checks that identity instead.
+- Rotating a frame and its loads must not change member-axis results (covers the original's inclined-member bugs).
+- The user will cross-check forces with another program; no Delphi golden values are available.
+
+## Not done yet
+- Integration into WBeamS16App (button, task storage, filling the task's boxes), drawing of the frame and diagrams,
+  point loads within a span, partial or trapezoidal loads, earthquake, settlements, temperature.

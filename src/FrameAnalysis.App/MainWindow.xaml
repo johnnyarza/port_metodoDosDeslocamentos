@@ -1,0 +1,523 @@
+<ui:FluentWindow x:Class="FrameAnalysis.App.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="{Binding WindowTitle}"
+                 Width="1440" Height="880" MinWidth="1100" MinHeight="640"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica"
+                 WindowCornerPreference="Round"
+                 WindowStartupLocation="CenterScreen">
+    <ui:FluentWindow.Resources>
+        <!-- Combo boxes inside grid cells read their lists from the window's view model. -->
+        <DataTemplate x:Key="SupportCell">
+            <ComboBox ItemsSource="{Binding DataContext.SupportTypes, RelativeSource={RelativeSource AncestorType=Window}}"
+                      SelectedItem="{Binding Support, UpdateSourceTrigger=PropertyChanged}" MinWidth="200">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumLabel}}" /></DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </DataTemplate>
+        <DataTemplate x:Key="AxisCell">
+            <ComboBox ItemsSource="{Binding DataContext.BendingAxes, RelativeSource={RelativeSource AncestorType=Window}}"
+                      SelectedItem="{Binding Axis, UpdateSourceTrigger=PropertyChanged}" MinWidth="150">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumLabel}}" /></DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </DataTemplate>
+        <DataTemplate x:Key="NodeICell">
+            <ComboBox ItemsSource="{Binding DataContext.NodeIds, RelativeSource={RelativeSource AncestorType=Window}}"
+                      SelectedItem="{Binding NodeI, UpdateSourceTrigger=PropertyChanged}" MinWidth="70" />
+        </DataTemplate>
+        <DataTemplate x:Key="NodeJCell">
+            <ComboBox ItemsSource="{Binding DataContext.NodeIds, RelativeSource={RelativeSource AncestorType=Window}}"
+                      SelectedItem="{Binding NodeJ, UpdateSourceTrigger=PropertyChanged}" MinWidth="70" />
+        </DataTemplate>
+        <DataTemplate x:Key="LoadNodeCell">
+            <ComboBox ItemsSource="{Binding DataContext.NodeIds, RelativeSource={RelativeSource AncestorType=Window}}"
+                      SelectedItem="{Binding NodeId, UpdateSourceTrigger=PropertyChanged}" MinWidth="70" />
+        </DataTemplate>
+        <DataTemplate x:Key="LoadMemberCell">
+            <ComboBox ItemsSource="{Binding DataContext.MemberIds, RelativeSource={RelativeSource AncestorType=Window}}"
+                      SelectedItem="{Binding MemberId, UpdateSourceTrigger=PropertyChanged}" MinWidth="70" />
+        </DataTemplate>
+        <DataTemplate x:Key="LoadCaseCell">
+            <ComboBox ItemsSource="{Binding DataContext.LoadCases, RelativeSource={RelativeSource AncestorType=Window}}"
+                      DisplayMemberPath="Name" SelectedValuePath="Id"
+                      SelectedValue="{Binding LoadCaseId, UpdateSourceTrigger=PropertyChanged}" MinWidth="110" />
+        </DataTemplate>
+        <DataTemplate x:Key="CategoryCell">
+            <ComboBox ItemsSource="{Binding DataContext.Categories, RelativeSource={RelativeSource AncestorType=Window}}"
+                      SelectedItem="{Binding Category, UpdateSourceTrigger=PropertyChanged}" MinWidth="120">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumLabel}}" /></DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </DataTemplate>
+        <DataTemplate x:Key="SelfWeightCell">
+            <CheckBox IsChecked="{Binding IncludeSelfWeight, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
+        </DataTemplate>
+        <DataTemplate x:Key="LimitStateCell">
+            <ComboBox ItemsSource="{Binding DataContext.LimitStates, RelativeSource={RelativeSource AncestorType=Window}}"
+                      SelectedItem="{Binding LimitState, UpdateSourceTrigger=PropertyChanged}" MinWidth="80">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumLabel}}" /></DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </DataTemplate>
+
+        <Style x:Key="EnumCombo" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumLabel}}" /></DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ToolbarButton" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="{Binding WindowTitle}" />
+
+        <WrapPanel Grid.Row="1" Margin="16,4,16,8">
+            <ui:Button Content="New" Icon="{ui:SymbolIcon Document24}" Command="{Binding NewModelCommand}" Style="{StaticResource ToolbarButton}" />
+            <ui:Button Content="Open" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding OpenCommand}" Style="{StaticResource ToolbarButton}" />
+            <ui:Button Content="Save" Icon="{ui:SymbolIcon Save24}" Command="{Binding SaveCommand}" Style="{StaticResource ToolbarButton}" />
+            <ui:Button Content="Load example" Icon="{ui:SymbolIcon Lightbulb24}" Command="{Binding LoadExampleCommand}" Style="{StaticResource ToolbarButton}" />
+            <ui:Button Content="Solve" Icon="{ui:SymbolIcon Play24}" Appearance="Primary" Command="{Binding SolveCommand}" Style="{StaticResource ToolbarButton}" />
+        </WrapPanel>
+
+        <ui:InfoBar Grid.Row="2" Margin="16,0,16,8" Title="{Binding MessageTitle}" Message="{Binding MessageText}"
+                    IsOpen="{Binding HasMessage, Mode=TwoWay}" IsClosable="True">
+            <ui:InfoBar.Style>
+                <Style TargetType="ui:InfoBar" BasedOn="{StaticResource {x:Type ui:InfoBar}}">
+                    <Setter Property="Severity" Value="Informational" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding MessageIsError}" Value="True">
+                            <Setter Property="Severity" Value="Error" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ui:InfoBar.Style>
+        </ui:InfoBar>
+
+        <Grid Grid.Row="3" Margin="16,0,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="660" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ================= Inputs ================= -->
+            <TabControl x:Name="Inputs" Grid.Column="0">
+                <TabItem Header="Section &amp; material">
+                    <StackPanel Margin="0,12,0,0">
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Section (all members)" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                <WrapPanel>
+                                    <StackPanel Width="140" Margin="0,0,10,8">
+                                        <TextBlock Text="Designation" Style="{StaticResource FieldLabel}" />
+                                        <ui:TextBox Text="{Binding Section.Designation}" />
+                                    </StackPanel>
+                                    <StackPanel Width="110" Margin="0,0,10,8">
+                                        <TextBlock Text="A (mm²)" Style="{StaticResource FieldLabel}" />
+                                        <ui:TextBox Text="{Binding Section.Area}" />
+                                    </StackPanel>
+                                    <StackPanel Width="110" Margin="0,0,10,8">
+                                        <TextBlock Text="Ix (10⁶ mm⁴)" Style="{StaticResource FieldLabel}" />
+                                        <ui:TextBox Text="{Binding Section.Ix}" />
+                                    </StackPanel>
+                                    <StackPanel Width="110" Margin="0,0,10,8">
+                                        <TextBlock Text="Iy (10⁶ mm⁴)" Style="{StaticResource FieldLabel}" />
+                                        <ui:TextBox Text="{Binding Section.Iy}" />
+                                    </StackPanel>
+                                    <StackPanel Width="110" Margin="0,0,10,8">
+                                        <TextBlock Text="Dead load (kN/m)" Style="{StaticResource FieldLabel}" />
+                                        <ui:TextBox Text="{Binding Section.DeadLoad}" />
+                                    </StackPanel>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Material (all members)" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                <WrapPanel>
+                                    <StackPanel Width="260" Margin="0,0,10,8">
+                                        <TextBlock Text="Steel grade" Style="{StaticResource FieldLabel}" />
+                                        <ui:TextBox Text="{Binding Material.Name}" />
+                                    </StackPanel>
+                                    <StackPanel Width="110" Margin="0,0,10,8">
+                                        <TextBlock Text="E (MPa)" Style="{StaticResource FieldLabel}" />
+                                        <ui:TextBox Text="{Binding Material.E}" />
+                                    </StackPanel>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Style="{StaticResource Note}" Margin="2,12,0,0"
+                                   Text="In WBeamS16App these values will come from the task's section and steel grade. Here they stand in for them so the solver can be tested. Each member bends about the axis chosen on the Members tab (Ix or Iy)." />
+                    </StackPanel>
+                </TabItem>
+
+                <TabItem Header="Nodes">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <WrapPanel Grid.Row="0" Margin="0,0,0,10" VerticalAlignment="Bottom">
+                            <StackPanel Width="90" Margin="0,0,8,0">
+                                <TextBlock Text="X (m)" Style="{StaticResource FieldLabel}" />
+                                <ui:TextBox Text="{Binding NewNodeX, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Width="90" Margin="0,0,8,0">
+                                <TextBlock Text="Y (m)" Style="{StaticResource FieldLabel}" />
+                                <ui:TextBox Text="{Binding NewNodeY, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Width="220" Margin="0,0,8,0">
+                                <TextBlock Text="Support" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding SupportTypes}" SelectedItem="{Binding NewNodeSupport}" Style="{StaticResource EnumCombo}" />
+                            </StackPanel>
+                            <ui:Button Content="Add" Icon="{ui:SymbolIcon Add24}" Appearance="Primary" Command="{Binding AddNodeCommand}" VerticalAlignment="Bottom" Margin="0,0,8,0" />
+                            <ui:Button Content="Delete" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DeleteNodeCommand}" VerticalAlignment="Bottom" />
+                        </WrapPanel>
+                        <Border Grid.Row="1" Style="{StaticResource ListBorder}">
+                            <DataGrid ItemsSource="{Binding Nodes}" SelectedItem="{Binding SelectedNode}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Node" Binding="{Binding Id}" IsReadOnly="True" Width="70" />
+                                    <DataGridTextColumn Header="X (m)" Binding="{Binding X}" Width="100" />
+                                    <DataGridTextColumn Header="Y (m)" Binding="{Binding Y}" Width="100" />
+                                    <DataGridTemplateColumn Header="Support" CellTemplate="{StaticResource SupportCell}" Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                        <TextBlock Grid.Row="2" Style="{StaticResource Note}" Margin="2,8,0,0"
+                                   Text="Global axes: X right, Y up. A node used by a member cannot be deleted; deleting a node deletes its point loads." />
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Members">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+                            <StackPanel Width="90" Margin="0,0,8,0">
+                                <TextBlock Text="Node I" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding NodeIds}" SelectedItem="{Binding NewMemberI}" />
+                            </StackPanel>
+                            <StackPanel Width="90" Margin="0,0,8,0">
+                                <TextBlock Text="Node J" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding NodeIds}" SelectedItem="{Binding NewMemberJ}" />
+                            </StackPanel>
+                            <StackPanel Width="170" Margin="0,0,8,0">
+                                <TextBlock Text="Bending axis" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding BendingAxes}" SelectedItem="{Binding NewMemberAxis}" Style="{StaticResource EnumCombo}" />
+                            </StackPanel>
+                            <ui:Button Content="Add" Icon="{ui:SymbolIcon Add24}" Appearance="Primary" Command="{Binding AddMemberCommand}" VerticalAlignment="Bottom" Margin="0,0,8,0" />
+                            <ui:Button Content="Delete" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DeleteMemberCommand}" VerticalAlignment="Bottom" />
+                        </WrapPanel>
+                        <Border Grid.Row="1" Style="{StaticResource ListBorder}">
+                            <DataGrid ItemsSource="{Binding Members}" SelectedItem="{Binding SelectedInputMember}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Member" Binding="{Binding Id}" IsReadOnly="True" Width="80" />
+                                    <DataGridTemplateColumn Header="Node I" CellTemplate="{StaticResource NodeICell}" Width="100" />
+                                    <DataGridTemplateColumn Header="Node J" CellTemplate="{StaticResource NodeJCell}" Width="100" />
+                                    <DataGridTemplateColumn Header="Bending axis" CellTemplate="{StaticResource AxisCell}" Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                        <TextBlock Grid.Row="2" Style="{StaticResource Note}" Margin="2,8,0,0"
+                                   Text="Local x runs from node I to node J; results in member axes follow that direction. Major: the web is in the frame plane (Ix, Mfx). Minor: the flanges are (Iy, Mfy). Deleting a member deletes its distributed loads." />
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Load cases">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+                            <StackPanel Width="160" Margin="0,0,8,0">
+                                <TextBlock Text="Name" Style="{StaticResource FieldLabel}" />
+                                <ui:TextBox Text="{Binding NewCaseName, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Width="140" Margin="0,0,8,0">
+                                <TextBlock Text="Category" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding NewCaseCategory}" Style="{StaticResource EnumCombo}" />
+                            </StackPanel>
+                            <ui:Button Content="Add" Icon="{ui:SymbolIcon Add24}" Appearance="Primary" Command="{Binding AddLoadCaseCommand}" VerticalAlignment="Bottom" Margin="0,0,8,0" />
+                            <ui:Button Content="Delete" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DeleteLoadCaseCommand}" VerticalAlignment="Bottom" />
+                        </WrapPanel>
+                        <Border Grid.Row="1" Style="{StaticResource ListBorder}">
+                            <DataGrid ItemsSource="{Binding LoadCases}" SelectedItem="{Binding SelectedLoadCase}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Id" Binding="{Binding Id}" IsReadOnly="True" Width="50" />
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                                    <DataGridTemplateColumn Header="Category" CellTemplate="{StaticResource CategoryCell}" Width="150" />
+                                    <DataGridTemplateColumn Header="Self-weight" CellTemplate="{StaticResource SelfWeightCell}" Width="100" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                        <TextBlock Grid.Row="2" Style="{StaticResource Note}" Margin="2,8,0,0"
+                                   Text="Self-weight adds the section's dead load to every member as a downward load, in one D case only. Several D, L or S cases add up in a combination; several W cases are alternatives (e.g. wind left and wind right), each with its own combinations. After changing the cases, use Reset to NBCC defaults on the Combinations tab." />
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Loads">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                            <TextBlock Text="Point loads on nodes" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <ui:Button Content="Add" Icon="{ui:SymbolIcon Add24}" Command="{Binding AddNodalLoadCommand}" Margin="0,0,8,0" />
+                                <ui:Button Content="Delete" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DeleteNodalLoadCommand}" />
+                            </StackPanel>
+                        </DockPanel>
+                        <Border Grid.Row="1" Style="{StaticResource ListBorder}">
+                            <DataGrid ItemsSource="{Binding NodalLoads}" SelectedItem="{Binding SelectedNodalLoad}">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Node" CellTemplate="{StaticResource LoadNodeCell}" Width="90" />
+                                    <DataGridTemplateColumn Header="Load case" CellTemplate="{StaticResource LoadCaseCell}" Width="*" />
+                                    <DataGridTextColumn Header="Fx (kN)" Binding="{Binding Fx}" Width="90" />
+                                    <DataGridTextColumn Header="Fy (kN)" Binding="{Binding Fy}" Width="90" />
+                                    <DataGridTextColumn Header="Mz (kN·m)" Binding="{Binding Mz}" Width="100" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                        <DockPanel Grid.Row="2" Margin="0,14,0,8">
+                            <TextBlock Text="Uniform loads on members (full length)" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <ui:Button Content="Add" Icon="{ui:SymbolIcon Add24}" Command="{Binding AddMemberLoadCommand}" Margin="0,0,8,0" />
+                                <ui:Button Content="Delete" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DeleteMemberLoadCommand}" />
+                            </StackPanel>
+                        </DockPanel>
+                        <Border Grid.Row="3" Style="{StaticResource ListBorder}">
+                            <DataGrid ItemsSource="{Binding MemberLoads}" SelectedItem="{Binding SelectedMemberLoad}">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Member" CellTemplate="{StaticResource LoadMemberCell}" Width="90" />
+                                    <DataGridTemplateColumn Header="Load case" CellTemplate="{StaticResource LoadCaseCell}" Width="*" />
+                                    <DataGridTextColumn Header="Qx (kN/m)" Binding="{Binding Qx}" Width="100" />
+                                    <DataGridTextColumn Header="Qy (kN/m)" Binding="{Binding Qy}" Width="100" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                        <TextBlock Grid.Row="4" Style="{StaticResource Note}" Margin="2,8,0,0"
+                                   Text="All loads are in global axes: X right, Y up, moments counter-clockwise. Gravity is negative (e.g. Qy = −12). Uniform loads are per metre of member length. Several loads on one node or member add up." />
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Combinations">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+                            <ui:Button Content="Add" Icon="{ui:SymbolIcon Add24}" Command="{Binding AddCombinationCommand}" Margin="0,0,8,0" />
+                            <ui:Button Content="Delete" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DeleteCombinationCommand}" Margin="0,0,8,0" />
+                            <ui:Button Content="Reset to NBCC defaults" Icon="{ui:SymbolIcon ArrowReset24}" Command="{Binding ResetCombinationsCommand}" />
+                        </WrapPanel>
+                        <Border Grid.Row="1" Style="{StaticResource ListBorder}">
+                            <DataGrid x:Name="CombinationGrid" ItemsSource="{Binding Combinations}" SelectedItem="{Binding SelectedCombination}" FrozenColumnCount="2">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="240" />
+                                    <DataGridTemplateColumn Header="Limit state" CellTemplate="{StaticResource LimitStateCell}" Width="100" />
+                                    <!-- One factor column per load case is added in code. -->
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                        <TextBlock Grid.Row="2" Style="{StaticResource Note}" Margin="2,8,0,0"
+                                   Text="Factors per load case; edit them freely. The defaults follow NBCC Table 4.1.3.2.-A (no earthquake), each made with 1.25D and 0.9D. Check them against your copy of the code: the companion factor on L is 0.5, and 1.0 applies to storage, equipment areas and service rooms." />
+                    </Grid>
+                </TabItem>
+            </TabControl>
+
+            <!-- ================= Results ================= -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <DockPanel Grid.Row="0" Margin="0,4,0,6">
+                    <TextBlock Text="Results" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0" />
+                    <ComboBox ItemsSource="{Binding ResultSets}" SelectedItem="{Binding SelectedResult}" DisplayMemberPath="Name"
+                              MinWidth="320" HorizontalAlignment="Left" IsEnabled="{Binding HasResults}" />
+                </DockPanel>
+                <StackPanel Grid.Row="1" Margin="0,0,0,6">
+                    <TextBlock Text="{Binding ResultStatus}" Style="{StaticResource Note}" />
+                    <TextBlock Text="Inputs changed since the last solve: press Solve to update the results."
+                               Foreground="{DynamicResource SystemFillColorCautionBrush}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Note}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStale}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+
+                <TabControl Grid.Row="2">
+                    <TabItem Header="Nodes">
+                        <Border Style="{StaticResource ListBorder}" Margin="0,12,0,0">
+                            <DataGrid ItemsSource="{Binding NodeRows}" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Node" Binding="{Binding Node}" Width="60" />
+                                    <DataGridTextColumn Header="ux (mm)" Binding="{Binding Ux, StringFormat={}{0:0.0000}}" Width="*" />
+                                    <DataGridTextColumn Header="uy (mm)" Binding="{Binding Uy, StringFormat={}{0:0.0000}}" Width="*" />
+                                    <DataGridTextColumn Header="θ (rad)" Binding="{Binding Rz, StringFormat={}{0:0.000000}}" Width="*" />
+                                    <DataGridTextColumn Header="Rx (kN)" Binding="{Binding Rx}" Width="*" />
+                                    <DataGridTextColumn Header="Ry (kN)" Binding="{Binding Ry}" Width="*" />
+                                    <DataGridTextColumn Header="Mz (kN·m)" Binding="{Binding Mz}" Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </TabItem>
+                    <TabItem Header="Members">
+                        <Grid Margin="0,12,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Border Style="{StaticResource ListBorder}">
+                                <DataGrid ItemsSource="{Binding MemberRows}" SelectedItem="{Binding SelectedMemberRow}" IsReadOnly="True">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Member" Binding="{Binding Member}" Width="70" />
+                                        <DataGridTextColumn Header="L (m)" Binding="{Binding Length, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="Axis" Binding="{Binding Axis}" Width="*" />
+                                        <DataGridTextColumn Header="N I" Binding="{Binding NI, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="V I" Binding="{Binding VI, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="M I" Binding="{Binding MI, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="N J" Binding="{Binding NJ, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="V J" Binding="{Binding VJ, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="M J" Binding="{Binding MJ, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="|M| max" Binding="{Binding MaxM, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="at x (m)" Binding="{Binding XAtMaxM, StringFormat={}{0:0.000}}" Width="*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Border>
+                            <TextBlock Grid.Row="1" Style="{StaticResource Note}" Margin="2,8,0,0"
+                                       Text="Member-end actions in member axes (forces on the member at ends I and J; kN, kN·m, counter-clockwise moments positive)." />
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Along member">
+                        <Grid Margin="0,12,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="Member" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <ComboBox ItemsSource="{Binding MemberRows}" SelectedItem="{Binding SelectedMemberRow}" DisplayMemberPath="Member" MinWidth="90" />
+                            </StackPanel>
+                            <Border Grid.Row="1" Style="{StaticResource ListBorder}">
+                                <DataGrid ItemsSource="{Binding StationRows}" IsReadOnly="True">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="x (m)" Binding="{Binding X, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="N (kN)" Binding="{Binding N, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="V (kN)" Binding="{Binding V, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="M (kN·m)" Binding="{Binding M, StringFormat={}{0:0.000}}" Width="*" />
+                                        <DataGridTextColumn Header="u (mm)" Binding="{Binding U, StringFormat={}{0:0.0000}}" Width="*" />
+                                        <DataGridTextColumn Header="v (mm)" Binding="{Binding Vd, StringFormat={}{0:0.0000}}" Width="*" />
+                                        <DataGridTextColumn Header="θ (rad)" Binding="{Binding Rotation, StringFormat={}{0:0.000000}}" Width="*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Border>
+                            <TextBlock Grid.Row="2" Style="{StaticResource Note}" Margin="2,8,0,8"
+                                       Text="Member axes, taken on the part towards node I: N tension positive; M positive when it stretches the local −y face (sagging for a beam drawn left to right); V = dM/dx. Displacements: u along the member, v across it. The extra row is where |M| is largest." />
+                            <Border Grid.Row="3" Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock FontWeight="SemiBold" Margin="0,0,0,6">
+                                        <Run Text="For the S16 check (no signs): member" />
+                                        <Run Text="{Binding DesignForces.MemberId, Mode=OneWay}" />
+                                        <Run Text="," />
+                                        <Run Text="{Binding DesignForces.ResultName, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <WrapPanel>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="Tf" /> <Run Text="{Binding DesignForces.Tf, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /> kN</TextBlock>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="Cf" /> <Run Text="{Binding DesignForces.Cf, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /> kN</TextBlock>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="Vf" /> <Run Text="{Binding DesignForces.Vf, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /> kN</TextBlock>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="Mfx" /> <Run Text="{Binding DesignForces.Mfx, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /> kN·m</TextBlock>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="Mfy" /> <Run Text="{Binding DesignForces.Mfy, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /> kN·m</TextBlock>
+                                    </WrapPanel>
+                                    <WrapPanel>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="ω2: Mmax" /> <Run Text="{Binding DesignForces.Mf, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /></TextBlock>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="Ma" /> <Run Text="{Binding DesignForces.Ma, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /></TextBlock>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="Mb" /> <Run Text="{Binding DesignForces.Mb, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /></TextBlock>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="Mc" /> <Run Text="{Binding DesignForces.Mc, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /></TextBlock>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="ω1: Mi" /> <Run Text="{Binding DesignForces.Mi, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /></TextBlock>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="Mj" /> <Run Text="{Binding DesignForces.Mj, Mode=OneWay, StringFormat={}{0:0.00}}" FontWeight="SemiBold" /></TextBlock>
+                                        <TextBlock Margin="0,0,18,4"><Run Text="double curvature:" /> <Run Text="{Binding DesignForces.DoubleCurvature, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Member across results">
+                        <Grid Margin="0,12,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="Member" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <ComboBox ItemsSource="{Binding MemberRows}" SelectedItem="{Binding SelectedMemberRow}" DisplayMemberPath="Member" MinWidth="90" />
+                            </StackPanel>
+                            <Border Grid.Row="1" Style="{StaticResource ListBorder}">
+                                <DataGrid ItemsSource="{Binding EnvelopeRows}" IsReadOnly="True" FrozenColumnCount="1">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="250" />
+                                        <DataGridTextColumn Header="Type" Binding="{Binding Kind}" Width="55" />
+                                        <DataGridTextColumn Header="Tf" Binding="{Binding Tf, StringFormat={}{0:0.00}}" Width="70" />
+                                        <DataGridTextColumn Header="Cf" Binding="{Binding Cf, StringFormat={}{0:0.00}}" Width="70" />
+                                        <DataGridTextColumn Header="Vf" Binding="{Binding Vf, StringFormat={}{0:0.00}}" Width="70" />
+                                        <DataGridTextColumn Header="Mf" Binding="{Binding Mf, StringFormat={}{0:0.00}}" Width="70" />
+                                        <DataGridTextColumn Header="Ma" Binding="{Binding Ma, StringFormat={}{0:0.00}}" Width="70" />
+                                        <DataGridTextColumn Header="Mb" Binding="{Binding Mb, StringFormat={}{0:0.00}}" Width="70" />
+                                        <DataGridTextColumn Header="Mc" Binding="{Binding Mc, StringFormat={}{0:0.00}}" Width="70" />
+                                        <DataGridTextColumn Header="Mi" Binding="{Binding Mi, StringFormat={}{0:0.00}}" Width="70" />
+                                        <DataGridTextColumn Header="Mj" Binding="{Binding Mj, StringFormat={}{0:0.00}}" Width="70" />
+                                        <DataGridTextColumn Header="Curvature" Binding="{Binding Curvature}" Width="80" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Border>
+                            <TextBlock Grid.Row="2" Style="{StaticResource Note}" Margin="2,8,0,0"
+                                       Text="The selected member in every load case and combination, as the S16 check would receive it (kN, kN·m, no signs). Later, picking a row will fill the WBeamS16App task." />
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </Grid>
+    </Grid>
+</ui:FluentWindow>
