@@ -72,7 +72,7 @@ public static class FrameSolver
         var cases = model.LoadCases.Select(lc => SolveCase(model, lc, elements, k, free, restrained, chol, nodeIndex)).ToList();
 
         var combos = new List<ResultSet>();
-        foreach (var c in model.Combinations)
+        foreach (var c in model.Combinations.Where(c => c.IsActive))
         {
             var parts = model.LoadCases.Select((lc, i) => (Set: cases[i], Factor: c.FactorOf(lc.Id))).Where(p => p.Factor != 0).ToList();
             if (parts.Count == 0) parts = [(cases[0], 0.0)]; // all factors zero: a valid, empty result

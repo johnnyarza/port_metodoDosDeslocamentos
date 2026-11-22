@@ -26,6 +26,23 @@ public sealed record EnvelopeRow(string Result, string Kind, double Tf, double C
     double Mi, double Mj, string Curvature);
 
 /// <summary>
+/// The largest values in the whole frame for one combination (no signs). The "At" columns give the member and x along
+/// it (m from node I), so the row can be traced back to the drawing.
+/// </summary>
+public sealed record SummaryRow(string Result, string Kind, double Tension, string TensionAt, double Compression, string CompressionAt,
+    double Shear, string ShearAt, double Moment, string MomentAt, double Displacement, string DisplacementAt, int MomentMember)
+{
+    public static SummaryRow From(ResultSet set)
+    {
+        var s = ResultSummary.From(set);
+        static string At(Extreme e) => e.Value <= 0 ? "" : $"{e.Id} @ {e.X.ToString("0.00", CultureInfo.CurrentCulture)}";
+        var kind = set.Kind switch { ResultKind.Uls => "ULS", ResultKind.Sls => "SLS", _ => "Case" };
+        return new SummaryRow(set.Name, kind, s.Tension.Value, At(s.Tension), s.Compression.Value, At(s.Compression), s.Shear.Value, At(s.Shear),
+            s.Moment.Value, At(s.Moment), s.Displacement.Value, At(s.Displacement), s.Moment.Id);
+    }
+}
+
+/// <summary>
 /// The whole test UI: inputs (the frame model) on the left, results on the right. Grid edits write straight into the
 /// model's objects; adds and deletes go through <see cref="FrameModel"/> so the links stay consistent.
 /// </summary>
@@ -187,6 +204,18 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isStale;
     [ObservableProperty] private string _resultStatus = "Not solved yet.";
 
+    /// <summary>Largest forces of every combination that was run (the "Combination results" tab).</summary>
+    [ObservableProperty] private IReadOnlyList<SummaryRow> _summaryRows = [];
+    [ObservableProperty] private SummaryRow? _selectedSummaryRow;
+
+    /// <summary>Picking a row shows that combination in the results and the drawing, on the member with the largest moment.</summary>
+    partial void OnSelectedSummaryRowChanged(SummaryRow? value)
+    {
+        if (value is null || ResultSets.FirstOrDefault(r => r.Name == value.Result) is not { } set) return;
+        if (value.Moment > 0) PickedMemberId = value.MomentMember;
+        SelectedResult = set;
+    }
+
     public bool HasResults => Results is not null;
 
     partial void OnResultsChanged(FrameResults? value) => OnPropertyChanged(nameof(HasResults));
@@ -262,6 +291,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             Results = FrameSolver.Analyze(_model);
             ResultSets = Results.All.ToList();
+            SummaryRows = Results.Combinations.Select(SummaryRow.From).ToList();
             var keep = SelectedResult?.Name;
             SelectedResult = ResultSets.FirstOrDefault(r => r.Name == keep) ?? ResultSets.FirstOrDefault();
             IsStale = false;
@@ -292,6 +322,7 @@ public sealed partial class MainViewModel : ObservableObject
         Refresh();
         Results = null;
         ResultSets = [];
+        SummaryRows = [];
         SelectedResult = null;
         IsStale = false;
         ResultStatus = "Not solved yet.";
@@ -529,6 +560,23 @@ public sealed partial class MainViewModel : ObservableObject
         _model.Combinations.Clear();
         _model.Combinations.AddRange(NbccCombinations.CreateDefaults(_model.LoadCases));
         Refresh();
+    }
+
+    /// <summary>Ticks every combination (or only ULS, only SLS, or none) so Solve runs just those.</summary>
+    [RelayCommand]
+    private void TickCombinations(string which)
+    {
+        foreach (var c in _model.Combinations)
+        {
+            c.IsActive = which switch
+            {
+                "All" => true,
+                "Uls" => c.LimitState == LimitState.Uls,
+                "Sls" => c.LimitState == LimitState.Sls,
+                _ => false,
+            };
+        }
+        Refresh(); // the grid shows plain objects, so re-read them
     }
 
     private static bool Confirm(string text) =>

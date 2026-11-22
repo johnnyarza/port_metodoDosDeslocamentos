@@ -59,6 +59,10 @@
         <DataTemplate x:Key="SelfWeightCell">
             <CheckBox IsChecked="{Binding IncludeSelfWeight, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
         </DataTemplate>
+        <DataTemplate x:Key="RunCell">
+            <CheckBox IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" MinWidth="0"
+                      ToolTip="Run this combination when solving" />
+        </DataTemplate>
         <DataTemplate x:Key="LimitStateCell">
             <ComboBox ItemsSource="{Binding DataContext.LimitStates, RelativeSource={RelativeSource AncestorType=Window}}"
                       SelectedItem="{Binding LimitState, UpdateSourceTrigger=PropertyChanged}" MinWidth="80">
@@ -340,19 +344,25 @@
                         <WrapPanel Grid.Row="0" Margin="0,0,0,10">
                             <ui:Button Content="Add" Icon="{ui:SymbolIcon Add24}" Command="{Binding AddCombinationCommand}" Margin="0,0,8,0" />
                             <ui:Button Content="Delete" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DeleteCombinationCommand}" Margin="0,0,8,0" />
-                            <ui:Button Content="Reset to NBCC defaults" Icon="{ui:SymbolIcon ArrowReset24}" Command="{Binding ResetCombinationsCommand}" />
+                            <ui:Button Content="Reset to NBCC defaults" Icon="{ui:SymbolIcon ArrowReset24}" Command="{Binding ResetCombinationsCommand}" Margin="0,0,16,0" />
+                            <TextBlock Text="Run" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <ui:Button Content="All" Command="{Binding TickCombinationsCommand}" CommandParameter="All" Margin="0,0,4,0" Padding="10,4" />
+                            <ui:Button Content="ULS" Command="{Binding TickCombinationsCommand}" CommandParameter="Uls" Margin="0,0,4,0" Padding="10,4" />
+                            <ui:Button Content="SLS" Command="{Binding TickCombinationsCommand}" CommandParameter="Sls" Margin="0,0,4,0" Padding="10,4" />
+                            <ui:Button Content="None" Command="{Binding TickCombinationsCommand}" CommandParameter="None" Padding="10,4" />
                         </WrapPanel>
                         <Border Grid.Row="1" Style="{StaticResource ListBorder}">
-                            <DataGrid x:Name="CombinationGrid" ItemsSource="{Binding Combinations}" SelectedItem="{Binding SelectedCombination}" FrozenColumnCount="2">
+                            <DataGrid x:Name="CombinationGrid" ItemsSource="{Binding Combinations}" SelectedItem="{Binding SelectedCombination}" FrozenColumnCount="3">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="240" />
+                                    <DataGridTemplateColumn Header="Run" CellTemplate="{StaticResource RunCell}" Width="50" />
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="230" />
                                     <DataGridTemplateColumn Header="Limit state" CellTemplate="{StaticResource LimitStateCell}" Width="100" />
                                     <!-- One factor column per load case is added in code. -->
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Border>
                         <TextBlock Grid.Row="2" Style="{StaticResource Note}" Margin="2,8,0,0"
-                                   Text="Factors per load case; edit them freely. The defaults follow NBCC Table 4.1.3.2.-A (no earthquake), each made with 1.25D and 0.9D. Check them against your copy of the code: the companion factor on L is 0.5, and 1.0 applies to storage, equipment areas and service rooms." />
+                                   Text="Factors per load case; edit them freely. Only ticked combinations are run (load cases always are). The defaults follow NBCC Table 4.1.3.2.-A (no earthquake), each made with 1.25D and 0.9D. Check them against your copy of the code: the companion factor on L is 0.5, and 1.0 applies to storage, equipment areas and service rooms." />
                     </Grid>
                 </TabItem>
             </TabControl>
@@ -570,6 +580,35 @@
                             </Border>
                             <TextBlock Grid.Row="2" Style="{StaticResource Note}" Margin="2,8,0,0"
                                        Text="The selected member in every load case and combination, as the S16 check would receive it (kN, kN·m, no signs). Later, picking a row will fill the WBeamS16App task." />
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Combination results">
+                        <Grid Margin="0,12,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Style="{StaticResource ListBorder}">
+                                <DataGrid ItemsSource="{Binding SummaryRows}" SelectedItem="{Binding SelectedSummaryRow}" IsReadOnly="True"
+                                          FrozenColumnCount="1" CanUserSortColumns="True">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Combination" Binding="{Binding Result}" Width="190" />
+                                        <DataGridTextColumn Header="Type" Binding="{Binding Kind}" Width="42" />
+                                        <DataGridTextColumn Header="T max" Binding="{Binding Tension, StringFormat={}{0:0.00}}" Width="58" />
+                                        <DataGridTextColumn Header="at" Binding="{Binding TensionAt}" Width="60" />
+                                        <DataGridTextColumn Header="C max" Binding="{Binding Compression, StringFormat={}{0:0.00}}" Width="58" />
+                                        <DataGridTextColumn Header="at" Binding="{Binding CompressionAt}" Width="60" />
+                                        <DataGridTextColumn Header="V max" Binding="{Binding Shear, StringFormat={}{0:0.00}}" Width="58" />
+                                        <DataGridTextColumn Header="at" Binding="{Binding ShearAt}" Width="60" />
+                                        <DataGridTextColumn Header="M max" Binding="{Binding Moment, StringFormat={}{0:0.00}}" Width="58" />
+                                        <DataGridTextColumn Header="at" Binding="{Binding MomentAt}" Width="60" />
+                                        <DataGridTextColumn Header="Δ max" Binding="{Binding Displacement, StringFormat={}{0:0.000}}" Width="58" />
+                                        <DataGridTextColumn Header="at" Binding="{Binding DisplacementAt}" Width="60" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Border>
+                            <TextBlock Grid.Row="1" Style="{StaticResource Note}" Margin="2,8,0,0"
+                                       Text="Largest values anywhere in the frame for each combination that was run, without signs: T tension and C compression (kN), V shear (kN), M moment (kN·m), Δ total displacement √(u² + v²) (mm). &quot;at&quot; is the member and x along it (m from node I). Click a column header to sort; click a row to show that combination in the results and the drawing." />
                         </Grid>
                     </TabItem>
                 </TabControl>

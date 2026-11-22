@@ -34,7 +34,9 @@ result (load case or combination) → `S16DesignForces` fills the task (Tf/Cf, V
 - **Supports:** free, pin, fixed, roller with vertical reaction, roller with horizontal reaction. No inclined rollers.
 - **NBCC combinations are an editable table** (`LoadCombination.Factors` per load case), seeded by
   `NbccCombinations.CreateDefaults` with ULS (Table 4.1.3.2.-A without E, 1.25D and 0.9D variants) and SLS. D, L and S
-  cases add up; W cases are alternatives. Only D, L, S, W for now.
+  cases add up; W cases are alternatives. Only D, L, S, W for now. Each combination has a Run tick
+  (`LoadCombination.IsActive`, saved, default true for older files); only ticked ones are solved, load cases always are.
+  `ResultSummary` gives each result's largest T, C, V, M and displacement with where they occur ("Combination results" tab).
 - **Deleting a node is blocked while a member uses it** (its point loads are deleted with it). Deleting a member deletes
   its loads; deleting a load case deletes its loads and factors.
 - **Storage is JSON**; the links Firebird enforced are enforced by `FrameModel` edits and `FrameModel.Validate()`

@@ -65,7 +65,8 @@ public partial class MainWindow : FluentWindow
     /// <summary>One factor column per load case in the combinations grid, bound to Factors[caseId].</summary>
     private void RebuildFactorColumns()
     {
-        while (CombinationGrid.Columns.Count > 2) CombinationGrid.Columns.RemoveAt(2);
+        const int fixedColumns = 3; // Run, Name, Limit state
+        while (CombinationGrid.Columns.Count > fixedColumns) CombinationGrid.Columns.RemoveAt(fixedColumns);
         foreach (var lc in _vm.LoadCases)
         {
             CombinationGrid.Columns.Add(new DataGridTextColumn

@@ -55,6 +55,10 @@ public sealed class LoadCombination
 {
     public string Name { get; set; } = "";
     public LimitState LimitState { get; set; }
+
+    /// <summary>Whether the solver builds this combination. Unticked ones stay in the table (and the file) but are not run.</summary>
+    public bool IsActive { get; set; } = true;
+
     public Dictionary<int, double> Factors { get; set; } = [];
 
     public double FactorOf(int loadCaseId) => Factors.TryGetValue(loadCaseId, out var f) ? f : 0;
